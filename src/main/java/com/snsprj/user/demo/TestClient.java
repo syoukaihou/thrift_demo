@@ -1,30 +1,42 @@
 package com.snsprj.user.demo;
 
-import com.snsprj.user.demo.service.HelloService.Client;
+import com.snsprj.user.demo.constant.UserServiceConst;
+import com.snsprj.user.demo.service.HelloService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 
+/**
+ * 测试，微服务客户端调用服务端
+ */
+@Slf4j
 public class TestClient {
 
     public static void main(String[] args) {
 
-        System.out.println("====>user client starting...");
+        try  {
+            // 传输层
+            TTransport transport = new TSocket("localhost", UserServiceConst.USER_SERVICE_PORT, 30000);
+            transport.open();
 
-        try (TTransport transport = new TSocket("localhost", 8989, 30000)) {
-
+            // 协议层, 与服务端对应
             TProtocol protocol = new TBinaryProtocol(transport);
 
-            Client client = new Client(protocol);
-            transport.open();
-            String result = client.sayHello("xiao");
+            // 创建RPC客户端
+            HelloService.Client helloService = new HelloService.Client(protocol);
 
-            System.out.println("result is " + result);
+            //  调用服务
+            String result = helloService.sayHello("xiao");
 
+            System.out.println("result: " + result);
+
+            // 关闭句柄s
+            transport.close();
         } catch (TException e) {
-            System.out.println("====>user client start failed!");
+            log.error("====>user client start failed!", e);
         }
     }
 }
